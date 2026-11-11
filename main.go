@@ -19,6 +19,8 @@ func main() {
 	mycommands := commands{container: map[string]func(*state, command) error{}}
 	mycommands.register("login", handlerLogin)
 	mycommands.register("register", handlerRegister)
+	mycommands.register("reset", handlerReset)
+	mycommands.register("users", handlerUsers)
 
 	c, err := config.Read()
 	if err != nil {

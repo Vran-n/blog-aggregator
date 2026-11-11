@@ -43,7 +43,7 @@ func handlerRegister(s *state, cmd command) error {
 		Name:      username,
 	}
 
-	user, err := s.db_queries.CreateUser(context.Background(), db_userparams)
+	_, err := s.db_queries.CreateUser(context.Background(), db_userparams)
 	if err != nil {
 		return fmt.Errorf("Failed to create new user: %w", err)
 	}
@@ -53,6 +53,28 @@ func handlerRegister(s *state, cmd command) error {
 	}
 
 	fmt.Printf("Registered \"%s\"\n", username)
-	fmt.Printf("user: %v\n", user)
+	return nil
+}
+
+func handlerReset(s *state, cmd command) error {
+	if err := s.db_queries.RemoveUsers(context.Background()); err != nil {
+		return fmt.Errorf("Failed to remove all users: %w", err)
+	}
+	return nil
+}
+
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db_queries.GetUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("Failed to get all users: %w", err)
+	}
+
+	for _, user := range users {
+		if s.cfg.CurrentUsername == user.Name {
+			fmt.Printf("* %s (current)\n", user.Name)
+		} else {
+			fmt.Printf("* %s\n", user.Name)
+		}
+	}
 	return nil
 }
