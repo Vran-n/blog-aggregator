@@ -1,26 +1,39 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"vran/blogaggre/internal/config"
+	"vran/blogaggre/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 type state struct {
-	cfg *config.Config
+	cfg        *config.Config
+	db_queries *database.Queries
 }
 
 func main() {
 	mycommands := commands{container: map[string]func(*state, command) error{}}
 	mycommands.register("login", handlerLogin)
+	mycommands.register("register", handlerRegister)
 
 	c, err := config.Read()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// register "postgres" driver with "database/sql"
+	dbURL := c.DatabaseURL
+	db, err := sql.Open("postgres", dbURL)
+
+	queries := database.New(db)
+
 	current_state := state{
-		cfg: &c,
+		cfg:        &c,
+		db_queries: queries,
 	}
 
 	if len(os.Args) < 2 {
