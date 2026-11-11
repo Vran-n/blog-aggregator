@@ -22,6 +22,7 @@ func main() {
 	mycommands.register("reset", handlerReset)
 	mycommands.register("users", handlerUsers)
 	mycommands.register("agg", handlerAgg)
+	mycommands.register("addfeed", handlerAddFeed)
 
 	c, err := config.Read()
 	if err != nil {

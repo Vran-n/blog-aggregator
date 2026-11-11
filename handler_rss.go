@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"html"
 	"io"
 	"net/http"
 	"time"
+	"vran/blogaggre/internal/database"
+
+	"github.com/google/uuid"
 )
 
 type RSS_Feed struct {
@@ -78,5 +82,39 @@ func handlerAgg(s *state, cmd command) error {
 		return err
 	}
 
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.arguments) == 0 {
+		return errors.New("Site name must not be empty!")
+	} else if len(cmd.arguments) == 1 {
+		return errors.New("URL must not be empty!")
+	}
+	name := cmd.arguments[0]
+	url := cmd.arguments[1]
+	username := s.cfg.CurrentUsername
+
+	user, err := s.db_queries.GetUser(context.Background(), username)
+	if err != nil {
+		return fmt.Errorf("Failed to get user \"%s\": %w", username, err)
+	}
+
+	db_feedparams := database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      name,
+		Url:       url,
+		UserID:    user.ID,
+	}
+
+	// cant ommit the first variable else it bitches
+	feed, err := s.db_queries.CreateFeed(context.Background(), db_feedparams)
+	if err != nil {
+		return fmt.Errorf("Failed to get feed \"%s\": %w", url, err)
+	}
+
+	fmt.Printf("Added feed \"%s\" to \"%s\"\n", username, feed.Url)
 	return nil
 }
