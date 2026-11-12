@@ -76,6 +76,20 @@ func funcFeed(ctx context.Context, feedURL string) (*RSS_Feed, error) {
 	return &rss_feed, nil
 }
 
+func markAsFetched(queries *database.Queries, feed database.Feed) error {
+	db_markfeedfetched := database.MarkFeedFetchedParams{
+		ID:            feed.ID,
+		UpdatedAt:     time.Now(),
+		LastFetchedAt: sql.NullTime{Time: time.Now()},
+	}
+
+	if err := queries.MarkFeedFetched(context.Background(), db_markfeedfetched); err != nil {
+		return fmt.Errorf("Cannot mark feed \"%s\" with url \"%s\" as fetched: %w", feed.ID, feed.Url, err)
+	}
+
+	return nil
+}
+
 func handlerAgg(s *state, cmd command) error {
 	if len(cmd.arguments) == 0 {
 		err := errors.New("Duration must not be empty!")
@@ -98,23 +112,36 @@ func handlerAgg(s *state, cmd command) error {
 		fmt.Println("Fetching all feeds:")
 
 		for _, feed := range feeds {
-			db_markfeedfetched := database.MarkFeedFetchedParams{
-				ID:            feed.ID,
-				UpdatedAt:     time.Now(),
-				LastFetchedAt: sql.NullTime{Time: time.Now(), Valid: true},
+			if err := markAsFetched(s.db_queries, feed); err != nil {
+				return err
 			}
 
-			if err := s.db_queries.MarkFeedFetched(context.Background(), db_markfeedfetched); err != nil {
-				return fmt.Errorf("Cannot mark feed \"%s\" with url \"%s\" as fetched: %w", feed.ID, feed.Url, err)
-			}
-
-			// "https://www.wagslane.dev/index.xml"
 			rss_feed, err := funcFeed(context.Background(), feed.Url)
 			if err != nil {
 				return err
 			}
 
 			fmt.Printf("\"%s\": %s\n", rss_feed.Channel.Title, rss_feed.Channel.Link)
+
+			for _, item := range rss_feed.Channel.Item {
+				truetime, err := time.Parse(time.RFC1123Z, item.PubDate)
+				if err != nil {
+					fmt.Printf("Unable to parse time of feed \"%s\": %s\n", rss_feed.Channel.Title, item.PubDate)
+				}
+
+				db_post := database.CreatePostParams{
+					ID:          uuid.New(),
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					Title:       sql.NullString{String: item.Title},
+					Url:         item.Link,
+					Description: sql.NullString{String: item.Description},
+					PublishedAt: sql.NullTime{Time: truetime},
+				}
+
+				s.db_queries.CreatePost(context.Background(), db_post)
+			}
+
 		}
 	}
 }
