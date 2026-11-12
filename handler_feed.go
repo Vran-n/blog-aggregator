@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -72,24 +73,59 @@ func funcFeed(ctx context.Context, feedURL string) (*RSS_Feed, error) {
 	}
 
 	rss_feed.decodeEscapedHTML()
-
 	return &rss_feed, nil
 }
 
 func handlerAgg(s *state, cmd command) error {
-	_, err := funcFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if len(cmd.arguments) == 0 {
+		err := errors.New("Duration must not be empty!")
+		return fmt.Errorf("%w\nUSAGE: agg [TIME](s or m or h)", err)
+	}
+	time_between_reqs := cmd.arguments[0]
+	interval, err := time.ParseDuration(time_between_reqs)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Could not parse string to time.duration: %w", err)
 	}
 
-	return nil
+	feeds, err := s.db_queries.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return fmt.Errorf("Cannot fetch next feeds: %w", err)
+	}
+
+	ticker := time.NewTicker(interval)
+	for ; ; <-ticker.C {
+		fmt.Println("Fetching all feeds:")
+
+		for _, feed := range feeds {
+			db_markfeedfetched := database.MarkFeedFetchedParams{
+				ID:            feed.ID,
+				UpdatedAt:     time.Now(),
+				LastFetchedAt: sql.NullTime{Time: time.Now(), Valid: true},
+			}
+
+			if err := s.db_queries.MarkFeedFetched(context.Background(), db_markfeedfetched); err != nil {
+				return fmt.Errorf("Cannot mark feed \"%s\" with url \"%s\" as fetched: %w", feed.ID, feed.Url, err)
+			}
+
+			// "https://www.wagslane.dev/index.xml"
+			rss_feed, err := funcFeed(context.Background(), feed.Url)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("\"%s\": %s\n", rss_feed.Channel.Title, rss_feed.Channel.Link)
+		}
+	}
 }
 
 func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.arguments) == 0 {
-		return errors.New("Site name must not be empty!")
+		err := errors.New("Name must not be empty!")
+		return fmt.Errorf("%w\nUSAGE: addfeed [NAME] [URL]", err)
 	} else if len(cmd.arguments) == 1 {
-		return errors.New("URL must not be empty!")
+		err := errors.New("URL must not be empty!")
+		return fmt.Errorf("%w\nUSAGE: addfeed [NAME] [URL]", err)
 	}
 	name := cmd.arguments[0]
 	url := cmd.arguments[1]
@@ -109,18 +145,17 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("Failed to get feed \"%s\": %w", url, err)
 	}
 
+	fmt.Printf("\"%s\" created a new feed \"%s\" with url \"%s\"\n", user.Name, feed.Name, feed.Url)
+
 	// this is only bad if i were to forget to change the name of the command
 	// SO REMIND YOURSELF
 	pseudocmd := command{
 		name:      "follow",
 		arguments: []string{url},
 	}
-
 	if err := handlerFollow(s, pseudocmd, user); err != nil {
 		return fmt.Errorf("Failed to follow feed \"%s\": %w", url, err)
 	}
-
-	fmt.Printf("\"%s\" created a new feed \"%s\" with url \"%s\"\n", user.Name, feed.Name, feed.Url)
 	return nil
 }
 

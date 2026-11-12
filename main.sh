@@ -1,13 +1,17 @@
 echo "Bootdev wrapper. Commands:" 
+echo "\"-q\"        quit" 
 echo "\"-r\"        run" 
 echo "\"-s\"        submit" 
 echo "\"-v\"        version" 
+echo "\"--db\"      visit database" 
 echo "\"--up\"      up database migration" 
 echo "\"--down\"    down database migration" 
 
 read OPTION
 
 case $OPTION in
+    -q)
+        ;;
     -r)
         echo ~~ DATABASE UP MIGRATION
         ./scripts/db_up.sh
@@ -24,6 +28,9 @@ case $OPTION in
         ;;
     -v)
         goose postgres 'postgres://postgres:postgres@localhost:5432/gator' version
+        ;;
+    --db)
+        psql 'postgres://postgres:postgres@localhost:5432/gator'
         ;;
     --up)
         echo ~~ DATABASE UP MIGRATION
