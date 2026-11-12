@@ -23,10 +23,10 @@ func main() {
 	mycommands.register("reset", handlerReset)
 	mycommands.register("users", handlerUsers)
 	mycommands.register("agg", handlerAgg)
-	mycommands.register("addfeed", handlerAddFeed)
+	mycommands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 	mycommands.register("feeds", handlerFeeds)
-	mycommands.register("follow", handlerFollow)
-	mycommands.register("following", handlerFollowing)
+	mycommands.register("follow", middlewareLoggedIn(handlerFollow))
+	mycommands.register("following", middlewareLoggedIn(handlerFollowing))
 
 	c, err := config.Read()
 	if err != nil {

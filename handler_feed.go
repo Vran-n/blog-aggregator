@@ -85,7 +85,7 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.arguments) == 0 {
 		return errors.New("Site name must not be empty!")
 	} else if len(cmd.arguments) == 1 {
@@ -93,12 +93,6 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 	name := cmd.arguments[0]
 	url := cmd.arguments[1]
-	username := s.cfg.CurrentUsername
-
-	user, err := s.db_queries.GetUser(context.Background(), username)
-	if err != nil {
-		return fmt.Errorf("Failed to get user \"%s\": %w", username, err)
-	}
 
 	db_feedparams := database.CreateFeedParams{
 		ID:        uuid.New(),
@@ -117,12 +111,12 @@ func handlerAddFeed(s *state, cmd command) error {
 
 	// this is only bad if i were to forget to change the name of the command
 	// SO REMIND YOURSELF
-	psuedocmd := command{
+	pseudocmd := command{
 		name:      "follow",
 		arguments: []string{url},
 	}
 
-	if err := handlerFollow(s, psuedocmd); err != nil {
+	if err := handlerFollow(s, pseudocmd, user); err != nil {
 		return fmt.Errorf("Failed to follow feed \"%s\": %w", url, err)
 	}
 

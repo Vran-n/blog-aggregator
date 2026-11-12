@@ -10,17 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.arguments) == 0 {
 		return errors.New("Site name must not be empty!")
 	}
-	username := s.cfg.CurrentUsername
 	url := cmd.arguments[0]
-
-	user, err := s.db_queries.GetUser(context.Background(), username)
-	if err != nil {
-		return fmt.Errorf("Failed to get user \"%s\": %w", username, err)
-	}
 
 	feed, err := s.db_queries.GetFeedFromURL(context.Background(), url)
 	if err != nil {
@@ -37,21 +31,14 @@ func handlerFollow(s *state, cmd command) error {
 
 	feedfollow, err := s.db_queries.CreateFeedFollow(context.Background(), db_feedfollow)
 	if err != nil {
-		return fmt.Errorf("Failed to create new feed follow for \"%s\" with url \"%s\": %w", username, url, err)
+		return fmt.Errorf("Failed to create new feed follow for \"%s\" with url \"%s\": %w", user.Name, url, err)
 	}
 
 	fmt.Printf("Added feed follow for \"%s\" with feed name \"%s\"\n", feedfollow.Username, feedfollow.Feedname)
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	username := s.cfg.CurrentUsername
-
-	user, err := s.db_queries.GetUser(context.Background(), username)
-	if err != nil {
-		return fmt.Errorf("Failed to get user \"%s\": %w", username, err)
-	}
-
+func handlerFollowing(s *state, cmd command, user database.User) error {
 	feedfollows, err := s.db_queries.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
 		return fmt.Errorf("Failed to get all feed follows: %w", err)
