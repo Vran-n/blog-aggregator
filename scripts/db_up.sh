@@ -1,2 +1,2 @@
 cd sql/schema
-goose postgres 'postgres://postgres:postgres@localhost:5432/gator' up-to 4
+goose postgres 'postgres://postgres:postgres@localhost:5432/gator' up-to 5
