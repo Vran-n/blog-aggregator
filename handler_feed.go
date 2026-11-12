@@ -120,7 +120,7 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("Failed to follow feed \"%s\": %w", url, err)
 	}
 
-	fmt.Printf("\"%s\" added a new feed \"%s\" with url \"%s\"\n", user.Name, feed.Name, feed.Url)
+	fmt.Printf("\"%s\" created a new feed \"%s\" with url \"%s\"\n", user.Name, feed.Name, feed.Url)
 	return nil
 }
 
@@ -136,7 +136,7 @@ func handlerFeeds(s *state, cmd command) error {
 			return fmt.Errorf("Failed to get user from id \"%s\": %w", feed.UserID, err)
 		}
 
-		fmt.Printf("> \"%s\" | %s | created by: \"%s\"\n", feed.Name, feed.Url, user.Name)
+		fmt.Printf("> \"%s\": %s | created by: \"%s\"\n", feed.Name, feed.Url, user.Name)
 	}
 	return nil
 }

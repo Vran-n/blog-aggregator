@@ -52,7 +52,7 @@ func handlerRegister(s *state, cmd command) error {
 		return fmt.Errorf("Failed to insert new user in config file: %w", err)
 	}
 
-	fmt.Printf("\"%s\" is successfully registered!\n", user.Name)
+	fmt.Printf("\"%s\" you are now registered!\n", user.Name)
 	return nil
 }
 
