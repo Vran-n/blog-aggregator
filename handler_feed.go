@@ -80,7 +80,7 @@ func markAsFetched(queries *database.Queries, feed database.Feed) error {
 	db_markfeedfetched := database.MarkFeedFetchedParams{
 		ID:            feed.ID,
 		UpdatedAt:     time.Now(),
-		LastFetchedAt: sql.NullTime{Time: time.Now()},
+		LastFetchedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 
 	if err := queries.MarkFeedFetched(context.Background(), db_markfeedfetched); err != nil {
@@ -133,13 +133,17 @@ func handlerAgg(s *state, cmd command) error {
 					ID:          uuid.New(),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
-					Title:       sql.NullString{String: item.Title},
+					Title:       sql.NullString{String: item.Title, Valid: true},
 					Url:         item.Link,
-					Description: sql.NullString{String: item.Description},
-					PublishedAt: sql.NullTime{Time: truetime},
+					Description: sql.NullString{String: item.Description, Valid: true},
+					PublishedAt: sql.NullTime{Time: truetime, Valid: true},
+					FeedID:      feed.ID,
 				}
 
-				s.db_queries.CreatePost(context.Background(), db_post)
+				_, err2 := s.db_queries.CreatePost(context.Background(), db_post)
+				if err2 != nil {
+					fmt.Printf("Unable to add post from \"%s\" in the database: %s\n", feed.Name, err2)
+				}
 			}
 
 		}

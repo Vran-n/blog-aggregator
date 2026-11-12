@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"vran/blogaggre/internal/config"
@@ -28,6 +29,7 @@ func main() {
 	mycommands.register("follow", middlewareLoggedIn(handlerFollow))
 	mycommands.register("following", middlewareLoggedIn(handlerFollowing))
 	mycommands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+	mycommands.register("browse", handlerBrowse)
 
 	c, err := config.Read()
 	if err != nil {
@@ -45,8 +47,20 @@ func main() {
 		db_queries: queries,
 	}
 
-	if len(os.Args) < 2 {
-		log.Fatal("Missing command!")
+	if len(os.Args) <= 1 {
+		fmt.Println("USAGE:")
+		fmt.Println("	login [USERNAME]")
+		fmt.Println("	register [USERNAME]")
+		fmt.Println("	reset")
+		fmt.Println("	users")
+		fmt.Println("	agg [TIME](s or m or h)")
+		fmt.Println("	addfeed [NAME] [URL]")
+		fmt.Println("	feeds")
+		fmt.Println("	follow [NAME] [URL]")
+		fmt.Println("	following")
+		fmt.Println("	unfollow [URL]")
+		fmt.Println("	browse")
+		os.Exit(0)
 	}
 
 	cmd_name := os.Args[1]
