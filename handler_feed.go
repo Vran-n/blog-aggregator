@@ -115,7 +115,18 @@ func handlerAddFeed(s *state, cmd command) error {
 		return fmt.Errorf("Failed to get feed \"%s\": %w", url, err)
 	}
 
-	fmt.Printf("Added feed \"%s\" to \"%s\"\n", username, feed.Url)
+	// this is only bad if i were to forget to change the name of the command
+	// SO REMIND YOURSELF
+	psuedocmd := command{
+		name:      "follow",
+		arguments: []string{url},
+	}
+
+	if err := handlerFollow(s, psuedocmd); err != nil {
+		return fmt.Errorf("Failed to follow feed \"%s\": %w", url, err)
+	}
+
+	fmt.Printf("\"%s\" added a new feed \"%s\" with url \"%s\"\n", user.Name, feed.Name, feed.Url)
 	return nil
 }
 

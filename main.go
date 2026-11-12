@@ -15,8 +15,9 @@ type state struct {
 	db_queries *database.Queries
 }
 
+var mycommands = commands{container: map[string]func(*state, command) error{}}
+
 func main() {
-	mycommands := commands{container: map[string]func(*state, command) error{}}
 	mycommands.register("login", handlerLogin)
 	mycommands.register("register", handlerRegister)
 	mycommands.register("reset", handlerReset)
@@ -24,6 +25,8 @@ func main() {
 	mycommands.register("agg", handlerAgg)
 	mycommands.register("addfeed", handlerAddFeed)
 	mycommands.register("feeds", handlerFeeds)
+	mycommands.register("follow", handlerFollow)
+	mycommands.register("following", handlerFollowing)
 
 	c, err := config.Read()
 	if err != nil {
