@@ -16,6 +16,8 @@ type state struct {
 	db_queries *database.Queries
 }
 
+const PROGRAM_NAME = "blogaggre"
+
 var mycommands = commands{container: map[string]func(*state, command) error{}}
 
 func main() {
@@ -48,18 +50,20 @@ func main() {
 	}
 
 	if len(os.Args) <= 1 {
-		fmt.Println("USAGE:")
-		fmt.Println("	login [USERNAME]")
-		fmt.Println("	register [USERNAME]")
-		fmt.Println("	reset")
-		fmt.Println("	users")
-		fmt.Println("	agg [TIME](s or m or h)")
-		fmt.Println("	addfeed [NAME] [URL]")
-		fmt.Println("	feeds")
-		fmt.Println("	follow [NAME] [URL]")
-		fmt.Println("	following")
-		fmt.Println("	unfollow [URL]")
-		fmt.Println("	browse")
+		fmt.Printf("USAGE: %s [COMMAND]... ARGS\n", PROGRAM_NAME)
+		fmt.Println()
+		fmt.Println("Commands:")
+		fmt.Println("  login [USERNAME]")
+		fmt.Println("  register [USERNAME]")
+		fmt.Println("  reset")
+		fmt.Println("  users")
+		fmt.Println("  agg [TIME](s or m or h)")
+		fmt.Println("  addfeed [NAME] [URL]")
+		fmt.Println("  feeds")
+		fmt.Println("  follow [NAME] [URL]")
+		fmt.Println("  following")
+		fmt.Println("  unfollow [URL]")
+		fmt.Println("  browse")
 		os.Exit(0)
 	}
 
