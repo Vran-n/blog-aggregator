@@ -7,14 +7,14 @@ import (
 	"os"
 )
 
+const path = "/.gatorconfig.json"
+
 type Config struct {
 	DatabaseURL     string `json:"db_url"`
 	CurrentUsername string `json:"current_user_name"`
 }
 
 func getConfigPath() string {
-	const path = "/.gatorconfig.json"
-
 	home_dir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
